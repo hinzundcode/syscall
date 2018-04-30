@@ -1,0 +1,7 @@
+{
+	"name": "syscall",
+	"version": "1.0.0",
+	"dependencies": {
+		"node-gyp": "^3.6.2"
+	}
+}
