@@ -30,7 +30,7 @@ void v8_throw(const char* x) {
 }
 
 // TODO: temporary solution until I can use BigInt directly in cpp
-Local<Value> FromUint64(Isolate* isolate, uint64_t n) {
+Local<Value> ToBigInt(Isolate* isolate, long n) {
 	Local<Object> global = isolate->GetCurrentContext()->Global();
 	Local<Value> bigint = global->Get(isolate->GetCurrentContext(), v8_str("BigInt")).ToLocalChecked();
 	
@@ -44,10 +44,10 @@ Local<Value> FromUint64(Isolate* isolate, uint64_t n) {
 }
 
 // TODO: temporary solution until I can use BigInt directly in cpp
-uint64_t ToUint64(Isolate* isolate, Local<Value> bigint) {
+long FromBigInt(Isolate* isolate, Local<Value> bigint) {
 	String::Utf8Value utf8(isolate, bigint);
 	
-	uint64_t value;
+	long value;
 	std::istringstream iss(*utf8);
 	iss >> value;
 	return value;
@@ -77,7 +77,7 @@ long ConvertArg(const FunctionCallbackInfo<Value>& args, int index) {
 	}
 	
 	if (IsBigInt(isolate, arg)) {
-		return ToUint64(args.GetIsolate(), arg);
+		return FromBigInt(args.GetIsolate(), arg);
 	}
 	
 	v8_throw_type("Bad argument");
@@ -94,7 +94,7 @@ void Syscall(const FunctionCallbackInfo<Value>& args) {
 	
 	uint32_t number = args[0]->Uint32Value();
 	
-	uint64_t result = 0;
+	long result = 0;
 	
 	switch (args.Length()) {
 		case 1:
@@ -121,7 +121,7 @@ void Syscall(const FunctionCallbackInfo<Value>& args) {
 	}
 	
 	//args.GetReturnValue().Set(BigInt.FromUint64(isolate, result));
-	args.GetReturnValue().Set(FromUint64(isolate, result));
+	args.GetReturnValue().Set(ToBigInt(isolate, result));
 }
 
 void GetPointer(const FunctionCallbackInfo<Value>& args) {
@@ -134,8 +134,8 @@ void GetPointer(const FunctionCallbackInfo<Value>& args) {
 	
 	Local<TypedArray> ta = args[0].As<TypedArray>();
 	auto contents = ta->Buffer()->GetContents();
-	uint64_t address = (long)contents.Data() + ta->ByteOffset();
-	args.GetReturnValue().Set(FromUint64(isolate, address));
+	long address = (long)contents.Data() + ta->ByteOffset();
+	args.GetReturnValue().Set(ToBigInt(isolate, address));
 }
 
 void Validate(const FunctionCallbackInfo<Value>& args) {
